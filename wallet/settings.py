@@ -38,7 +38,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'wallets',
+    # Third Party
+    'rest_framework',
+    'django_celery_beat',
+    # Apps
+    'wallets.apps.WalletsConfig',
 ]
 
 MIDDLEWARE = [
