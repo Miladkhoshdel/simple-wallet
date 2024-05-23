@@ -1,6 +1,6 @@
 import uuid
 
-from django.db import models
+from django.db import models, transaction
 from wallets.managers import WalletManager, TransactionManager
 from base.models import BaseModel
 
@@ -11,11 +11,15 @@ class Wallet(BaseModel):
     objects = WalletManager()
 
     def deposit(self, amount: int):
-        # todo: deposit the amount into this wallet
-        pass
+        if amount <= 0:
+            raise ValueError("Deposit amount must be positive.")
+        with transaction.atomic():
+            self.balance = models.F('balance') + amount
+            self.save(update_fields=['balance','updated_at'])
+            self.refresh_from_db()
 
     def __str__(self):
-        return self.uuid
+        return f"{str(self.uuid)}"
 
 class Transaction(BaseModel):
     amount = models.BigIntegerField()
