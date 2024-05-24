@@ -5,3 +5,6 @@ class WalletManager(models.Manager):
 
 class TransactionManager(models.Manager):
     pass
+
+class ScheduledWithdrawalManager(models.Manager):
+    pass
