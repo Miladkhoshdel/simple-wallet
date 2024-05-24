@@ -10,7 +10,24 @@ from requests.exceptions import HTTPError, ConnectionError, Timeout
 
 @shared_task
 def process_withdrawal(scheduled_withdrawal_id):
+    """
+    Asynchronous task for processing a scheduled withdrawal.
 
+    This task function is decorated with @shared_task from Celery,
+    making it an asynchronous task. It processes a scheduled withdrawal
+    by sending a request to the bank API to initiate the withdrawal.
+    If the bank response indicates success, the withdrawal amount is
+    deducted from the wallet balance and a transaction log is created.
+    If an error occurs during the process, the withdrawal amount is
+    refunded to the wallet balance and an appropriate transaction log
+    is created.
+
+    Args:
+        scheduled_withdrawal_id (int): The ID of the scheduled withdrawal to process.
+
+    Returns:
+        str: A message indicating the success or failure of the withdrawal processing.
+    """
     scheduled_withdrawal = ScheduledWithdrawal.objects.get(id=scheduled_withdrawal_id)
     wallet = scheduled_withdrawal.wallet
     
