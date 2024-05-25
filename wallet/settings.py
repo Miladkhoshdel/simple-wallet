@@ -11,7 +11,9 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
-
+from base.vars import BROKER_URL
+from wallet.init import initialize_secret_key
+import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -20,7 +22,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-89ufi$15chz5o&js3*qv9#_=!q2*-iju27$(#me76)=67o&p5m'
+SECRET_FILE_NAME = 'key'
+SECRET_FILE_PATH = os.path.join(BASE_DIR, SECRET_FILE_NAME)
+SECRET_KEY = initialize_secret_key(SECRET_FILE_PATH)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -135,7 +139,4 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [],
 }
 
-CELERY_BROKER_URL = 'redis://0.0.0.0:6379/0'
-CELERY_RESULT_BACKEND = 'redis://0.0.0.0:6379/1'
-
-CELERY_BROKER_URL = 'amqp://toman:1qaz1qaz@127.0.0.1:5672//'
+CELERY_BROKER_URL = BROKER_URL

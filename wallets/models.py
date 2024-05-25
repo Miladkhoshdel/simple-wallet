@@ -1,12 +1,12 @@
 import uuid
-
+import requests
+from decimal import Decimal
 from django.db import models, transaction
+from requests.exceptions import HTTPError, ConnectionError, Timeout
 from wallets.managers import WalletManager, TransactionManager, ScheduledWithdrawalManager
 from base.models import BaseModel
-from decimal import Decimal
+from base.vars import BANK_URL
 from base.exceptions import InsufficientFundsError, BankException
-import requests
-from requests.exceptions import HTTPError, ConnectionError, Timeout
 
 class Wallet(BaseModel):
     """
@@ -100,7 +100,7 @@ class Wallet(BaseModel):
                 self.balance = models.F('balance') - amount
                 self.save(update_fields=['balance','updated_at'])
                 try:
-                    bank_response = requests.post('http://localhost:8010', timeout=5)
+                    bank_response = requests.post(BANK_URL, timeout=5)
                     bank_response.raise_for_status()
                     json_response = bank_response.json()
                     status_code = json_response.get("status", "-")

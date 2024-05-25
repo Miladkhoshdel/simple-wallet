@@ -1,12 +1,10 @@
 from celery import shared_task
 from wallets.models import ScheduledWithdrawal, Transaction
-from django.utils import timezone
-from decimal import Decimal
-from django.db import models, transaction
+from django.db import transaction
 import requests
 from base.exceptions import BankException
 from requests.exceptions import HTTPError, ConnectionError, Timeout
-
+from base.vars import BANK_URL
 
 @shared_task
 def process_withdrawal(scheduled_withdrawal_id):
@@ -37,7 +35,7 @@ def process_withdrawal(scheduled_withdrawal_id):
     try:
         with transaction.atomic():
             try:
-                bank_response = requests.post('http://localhost:8010', timeout=5)
+                bank_response = requests.post(BANK_URL, timeout=5)
                 bank_response.raise_for_status()
                 json_response = bank_response.json()
                 status_code = json_response.get("status", "-")
