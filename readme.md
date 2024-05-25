@@ -164,3 +164,7 @@ Vary: Accept
 Transactions are submitted with messages and statuses received from the bank microservice for withdrawal processes. For scheduled withdrawal processes, the amount will be subtracted from the account balance. If the withdrawal process fails, the amount will be added back to the balance. This information is logged in the transaction model, as shown in the image below.
 
 ![GitHub Logo](/images/transactions.png)
+
+## Variables
+All required variables are stored in base/vars.py. This file should be moved into the Docker variable file for production.
+Also the site key is generated randomly the first time the Django server is run."
