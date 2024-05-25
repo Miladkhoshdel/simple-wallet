@@ -164,4 +164,3 @@ Vary: Accept
 Transactions are submitted with messages and statuses received from the bank microservice for withdrawal processes. For scheduled withdrawal processes, the amount will be subtracted from the account balance. If the withdrawal process fails, the amount will be added back to the balance. This information is logged in the transaction model, as shown in the image below.
 
 ![GitHub Logo](/images/transactions.png)
-Format: ![Alt Text](url)
