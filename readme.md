@@ -150,11 +150,6 @@ Allow: POST, OPTIONS
 Content-Type: application/json
 Vary: Accept
 
-HTTP 200 OK
-Allow: POST, OPTIONS
-Content-Type: application/json
-Vary: Accept
-
 {
     "status": "success",
     "message": "Withdrawal scheduled"
