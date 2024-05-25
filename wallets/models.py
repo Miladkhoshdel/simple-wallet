@@ -75,7 +75,7 @@ class Wallet(BaseModel):
                 self.balance = models.F('balance') - amount
                 self.save(update_fields=['balance','updated_at'])
         except Exception as e:
-            print(e)
+            return False
 
     def withdraw(self, amount: Decimal):
         """

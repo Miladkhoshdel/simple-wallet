@@ -35,33 +35,50 @@ def process_withdrawal(scheduled_withdrawal_id):
     try:
         with transaction.atomic():
             try:
-                bank_response = requests.post(BANK_URL, timeout=5)
-                bank_response.raise_for_status()
-                json_response = bank_response.json()
-                status_code = json_response.get("status", "-")
-                status_response = json_response.get("data","-")
-                settle=True
-                if status_code != 200:
-                    raise BankException("Bank Status code not equal to 200 raised.")
+                if wallet.balance >= scheduled_withdrawal.amount:
+                    print("sufficient balance")
+                    wallet.schadule_withdraw(scheduled_withdrawal.amount)
+                    bank_response = requests.post(BANK_URL, timeout=5)
+                    bank_response.raise_for_status()
+                    json_response = bank_response.json()
+                    status_code = json_response.get("status", "-")
+                    status_response = json_response.get("data","-")
+                    settle=True
+                    if status_code != 200:
+                        raise BankException("Bank Status code not equal to 200 raised.")
+                else:
+                    settle=False
+                    status_code="-"
+                    status_response="-"
+                    print("insufficient balance.")
+                    return "insufficient balance."
             except HTTPError as http_err:
+                print("http_err Exception Raised.")
                 wallet.deposit(scheduled_withdrawal.amount)
                 status_code = 500
                 status_response = "HTTP Error."
                 settle=False
             except ConnectionError as conn_err:
+                print("conn_err Exception Raised.")
                 wallet.deposit(scheduled_withdrawal.amount)
                 status_code = 503
                 status_response = "Service unavailable."
                 settle=False
             except Timeout as timeout_err:
+                print("timeout_err Exception Raised.")
                 wallet.deposit(scheduled_withdrawal.amount)
                 status_code = 408
                 status_response = "Request Timeout"
                 settle=False
             except Exception as e:
+                print("Exception Raised.")
+                settle=False
+                status_response="-"
+                status_response="-"
                 wallet.deposit(scheduled_withdrawal.amount)
                 settle=False
             finally:
+                print("Finally block called.")
                 transaction_log = Transaction.objects.create(
                     wallet=wallet,
                     amount=scheduled_withdrawal.amount,
@@ -74,6 +91,9 @@ def process_withdrawal(scheduled_withdrawal_id):
 
                 
     except Exception as e:
+        print("Main Exception Raised.")
+        print(e)
+
         with transaction.atomic():
             wallet.deposit(scheduled_withdrawal.amount)
             transaction_log = Transaction.objects.create(

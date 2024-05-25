@@ -209,7 +209,6 @@ class ScheduleWithdrawView(APIView):
                 scheduled_withdrawal = ScheduledWithdrawal.objects.create(wallet=wallet, amount=amount, scheduled_time=scheduled_time)
                 scheduled_withdrawal.save()
 
-                wallet.schadule_withdraw(amount)
                 clocked, created = ClockedSchedule.objects.get_or_create(
                     clocked_time=scheduled_time
                     )

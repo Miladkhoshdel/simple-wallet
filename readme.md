@@ -32,6 +32,11 @@ python manage.py createsuperuser
 ```
 python manage.py runserver {IP}:{PORT}
 ```
+- Run celery and celery beat workers:
+```
+celery -A wallet beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
+celery -A wallet worker --loglevel=info --concurrency {NUMBER-OF-WORKERS:INT} -E -Q withdraw
+```
 
 ## Create Wallet
 This API is used to create a wallet. You can set the initial balance, but the UUID field is optional, and the system will generate it if you do not provide it.
@@ -155,3 +160,8 @@ Vary: Accept
     "message": "Withdrawal scheduled"
 }
 ```
+## Transactions
+Transactions are submitted with messages and statuses received from the bank microservice for withdrawal processes. For scheduled withdrawal processes, the amount will be subtracted from the account balance. If the withdrawal process fails, the amount will be added back to the balance. This information is logged in the transaction model, as shown in the image below.
+
+![GitHub Logo](/images/transactions.png)
+Format: ![Alt Text](url)
