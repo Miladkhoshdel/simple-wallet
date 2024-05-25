@@ -37,7 +37,10 @@ python manage.py runserver {IP}:{PORT}
 celery -A wallet beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
 celery -A wallet worker --loglevel=info --concurrency {NUMBER-OF-WORKERS:INT} -E -Q withdraw
 ```
-
+- Run test (Optional)
+```
+python manage.py test
+```
 ## Create Wallet
 This API is used to create a wallet. You can set the initial balance, but the UUID field is optional, and the system will generate it if you do not provide it.
 
