@@ -16,7 +16,7 @@ class Wallet(BaseModel):
         uuid (UUIDField): A unique identifier for the wallet.
         balance (DecimalField): The current balance of the wallet.
     """
-    uuid = models.UUIDField(default=uuid.uuid4, unique=True)
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, db_index=True)
     balance = models.DecimalField(default=0, max_digits=10, decimal_places=2)
 
     objects = WalletManager()
@@ -172,7 +172,7 @@ class Transaction(BaseModel):
         bank_message (CharField): The message returned by the bank.
     """
     amount = models.DecimalField(default=0, max_digits=10, decimal_places=2)
-    wallet = models.ForeignKey(Wallet,on_delete=models.CASCADE)
+    wallet = models.ForeignKey(Wallet,on_delete=models.CASCADE, db_index=True)
     is_withdrawal = models.BooleanField(default=False)
     settle = models.BooleanField(default=False)
     bank_status_code = models.CharField(max_length=5, blank=True, null=True)
@@ -199,7 +199,7 @@ class ScheduledWithdrawal(BaseModel):
         scheduled_time (DateTimeField): The time the withdrawal is scheduled for.
         processed (BooleanField): Indicates if the scheduled withdrawal has been processed.
     """
-    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE)
+    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, db_index=True)
     amount = models.DecimalField(default=0, max_digits=10, decimal_places=2)
     scheduled_time = models.DateTimeField()
     processed = models.BooleanField(default=False)
