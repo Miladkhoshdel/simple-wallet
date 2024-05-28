@@ -175,6 +175,11 @@ class ScheduleWithdrawView(APIView):
             by its UUID, schedules the withdrawal, creates a periodic task for
             processing the withdrawal, and returns a success response if the
             scheduling is successful.
+    Sample Request:
+        {
+        "amount":10,
+        "scheduled_time":"2024-05-24 09:00:00"
+        }
     """
     def post(self, request, uuid, *args, **kwargs):
         """

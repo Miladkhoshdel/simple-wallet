@@ -53,6 +53,8 @@ class Wallet(BaseModel):
                         settle=True
                     )
 
+    # This method is no longer used due to system improvements and bug fixes.
+    # It is flagged for removal in the next release.
     def schadule_withdraw(self, amount: Decimal):
         """
         Schedules a withdrawal from the wallet.

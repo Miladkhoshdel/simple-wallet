@@ -1,10 +1,7 @@
 from celery import shared_task
-from wallets.models import ScheduledWithdrawal, Transaction
-from django.db import transaction
-import requests
-from base.exceptions import BankException
-from requests.exceptions import HTTPError, ConnectionError, Timeout
-from base.vars import BANK_URL
+from wallets.models import ScheduledWithdrawal, Wallet
+from django.db import transaction, OperationalError
+import time
 
 @shared_task
 def process_withdrawal(scheduled_withdrawal_id):
@@ -20,6 +17,9 @@ def process_withdrawal(scheduled_withdrawal_id):
     refunded to the wallet balance and an appropriate transaction log
     is created.
 
+    The task retries if it encounters a database lock, waiting for a 
+    certain period before retrying, up to a maximum number of attempts.
+
     Args:
         scheduled_withdrawal_id (int): The ID of the scheduled withdrawal to process.
 
@@ -32,79 +32,26 @@ def process_withdrawal(scheduled_withdrawal_id):
     if scheduled_withdrawal.processed:
         return
     
-    try:
-        with transaction.atomic():
-            try:
-                if wallet.balance >= scheduled_withdrawal.amount:
-                    print("sufficient balance")
-                    wallet.schadule_withdraw(scheduled_withdrawal.amount)
-                    bank_response = requests.post(BANK_URL, timeout=5)
-                    bank_response.raise_for_status()
-                    json_response = bank_response.json()
-                    status_code = json_response.get("status", "-")
-                    status_response = json_response.get("data","-")
-                    settle=True
-                    if status_code != 200:
-                        raise BankException("Bank Status code not equal to 200 raised.")
-                else:
-                    settle=False
-                    status_code="-"
-                    status_response="-"
-                    print("insufficient balance.")
-                    return "insufficient balance."
-            except HTTPError as http_err:
-                print("http_err Exception Raised.")
-                wallet.deposit(scheduled_withdrawal.amount)
-                status_code = 500
-                status_response = "HTTP Error."
-                settle=False
-            except ConnectionError as conn_err:
-                print("conn_err Exception Raised.")
-                wallet.deposit(scheduled_withdrawal.amount)
-                status_code = 503
-                status_response = "Service unavailable."
-                settle=False
-            except Timeout as timeout_err:
-                print("timeout_err Exception Raised.")
-                wallet.deposit(scheduled_withdrawal.amount)
-                status_code = 408
-                status_response = "Request Timeout"
-                settle=False
-            except Exception as e:
-                print("Exception Raised.")
-                settle=False
-                status_response="-"
-                status_response="-"
-                wallet.deposit(scheduled_withdrawal.amount)
-                settle=False
-            finally:
-                print("Finally block called.")
-                transaction_log = Transaction.objects.create(
-                    wallet=wallet,
-                    amount=scheduled_withdrawal.amount,
-                    is_withdrawal=True,
-                    settle=settle,
-                    bank_status_code = status_code,
-                    bank_message = status_response
-                )
-                return f"Success Processed withdrawal of {scheduled_withdrawal.amount} for {wallet.uuid}"
+    attempt = 0
+    max_attempts = 50
+    wait_time = 1 # seconds to wait before retrying
 
+    try:
+        while attempt <= max_attempts:
+            with transaction.atomic():
+                    try:
+                        wallet = Wallet.objects.select_for_update().get(id=wallet.id)
+                        wallet.withdraw(scheduled_withdrawal.amount)
+                        break
+                        
+                    except OperationalError as e:
+                        attempt += 1
+                        print(f"Database lock could not be acquired. Attempt {attempt}/{max_attempts}. Retrying in {wait_time} seconds.")
+                        time.sleep(wait_time)
                 
     except Exception as e:
         print("Main Exception Raised.")
         print(e)
-
-        with transaction.atomic():
-            wallet.deposit(scheduled_withdrawal.amount)
-            transaction_log = Transaction.objects.create(
-                    wallet=wallet,
-                    amount=scheduled_withdrawal.amount,
-                    is_withdrawal=True,
-                    settle=False
-                )
-            return f"Failed Processed withdrawal of {scheduled_withdrawal.amount} for {wallet.uuid}"
-
-        
 
     finally:
         scheduled_withdrawal.processed = True
